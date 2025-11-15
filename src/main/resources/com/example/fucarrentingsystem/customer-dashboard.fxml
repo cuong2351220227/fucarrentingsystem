@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.fucarrentingsystem.controller.CustomerDashboardController">
+    <top>
+        <VBox spacing="10.0" style="-fx-background-color: #16a085; -fx-padding: 15;">
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <Label text="Customer Dashboard - FU Car Renting System" textFill="WHITE">
+                    <font>
+                        <Font name="System Bold" size="20.0"/>
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="welcomeLabel" textFill="WHITE">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <Button text="Logout" onAction="#handleLogout" style="-fx-background-color: #c0392b; -fx-text-fill: white;"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <!-- Profile Management Tab -->
+            <Tab text="My Profile">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="15.0">
+                        <padding>
+                            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+                        </padding>
+
+                        <Label text="Personal Information">
+                            <font>
+                                <Font name="System Bold" size="16.0"/>
+                            </font>
+                        </Label>
+
+                        <GridPane hgap="15.0" vgap="15.0" maxWidth="600.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="120.0" prefWidth="150.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="400.0"/>
+                            </columnConstraints>
+
+                            <Label text="Full Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <TextField fx:id="profileNameField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                            <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <TextField fx:id="profileEmailField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                            <Label text="Mobile:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                            <TextField fx:id="profileMobileField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                            <Label text="Birthday:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                            <DatePicker fx:id="profileBirthdayPicker" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                            <Label text="Identity Card:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                            <TextField fx:id="profileIdentityCardField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                            <Label text="Licence Number:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                            <TextField fx:id="profileLicenceNumberField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+                            <Label text="Licence Date:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+                            <DatePicker fx:id="profileLicenceDatePicker" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+
+                            <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+                            <PasswordField fx:id="profilePasswordField" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                        </GridPane>
+
+                        <HBox spacing="10.0">
+                            <Button fx:id="updateProfileButton" text="Update Profile" onAction="#handleUpdateProfile"
+                                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px;"/>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- Rental History Tab -->
+            <Tab text="Rental History">
+                <VBox spacing="10.0">
+                    <padding>
+                        <Insets top="15.0" right="15.0" bottom="15.0" left="15.0"/>
+                    </padding>
+
+                    <Label text="My Rental History">
+                        <font>
+                            <Font name="System Bold" size="16.0"/>
+                        </font>
+                    </Label>
+
+                    <TableView fx:id="rentalHistoryTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="rentalCarColumn" text="Car Name" prefWidth="200.0"/>
+                            <TableColumn fx:id="rentalPickupColumn" text="Pickup Date" prefWidth="150.0"/>
+                            <TableColumn fx:id="rentalReturnColumn" text="Return Date" prefWidth="150.0"/>
+                            <TableColumn fx:id="rentalPriceColumn" text="Price" prefWidth="100.0"/>
+                            <TableColumn fx:id="rentalStatusColumn" text="Status" prefWidth="150.0"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>
