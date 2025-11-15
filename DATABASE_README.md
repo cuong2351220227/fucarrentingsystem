@@ -139,34 +139,35 @@ VALUES
 ```sql
 INSERT INTO Car (CarName, CarModelYear, Color, Capacity, Description, ImportDate, ProducerID, RentPrice, Status) 
 VALUES 
-('Toyota Camry', 2023, 'White', 5, 'Sedan hạng trung, tiết kiệm nhiên liệu, phù hợp cho gia đình', '2023-01-15', 1, 500000, 'Available'),
-('Honda Civic', 2023, 'Black', 5, 'Sedan thể thao, động cơ mạnh mẽ', '2023-02-20', 2, 450000, 'Available'),
-('Ford Ranger', 2022, 'Silver', 5, 'Bán tải mạnh mẽ, phù hợp địa hình khó', '2022-11-10', 3, 800000, 'Available'),
-('BMW 5 Series', 2023, 'Blue', 5, 'Sedan hạng sang, tiện nghi cao cấp', '2023-03-05', 4, 1200000, 'Available'),
-('Mercedes-Benz C-Class', 2023, 'Red', 5, 'Sedan sang trọng, công nghệ hiện đại', '2023-04-12', 5, 1300000, 'Rented'),
-('Toyota Vios', 2022, 'White', 5, 'Sedan nhỏ gọn, giá cả phải chăng', '2022-08-15', 1, 350000, 'Available'),
-('Honda CR-V', 2023, 'Gray', 7, 'SUV rộng rãi, phù hợp cho gia đình đông người', '2023-05-20', 2, 700000, 'Maintenance');
+('Mazda 3', 2024, 'Red', 5, 'Sedan nhỏ gọn, thiết kế KODO đẹp mắt, lái thể thao', '2024-05-01', 6, 550000, 'Available'),
+('Kia Seltos', 2023, 'Orange', 5, 'SUV đô thị cá tính, nhiều tiện nghi', '2023-12-10', 7, 600000, 'Available'),
+('Hyundai Accent', 2022, 'Brown', 5, 'Sedan giá rẻ, phổ thông, bền bỉ', '2022-10-25', 8, 300000, 'Rented'),
+('Porsche 911', 2024, 'Yellow', 2, 'Xe thể thao hiệu suất cao, siêu tốc độ', '2024-06-15', 9, 5000000, 'Available'),
+('Land Rover Defender', 2023, 'Green', 7, 'SUV địa hình huyền thoại, khả năng off-road vượt trội', '2023-09-01', 10, 2000000, 'Maintenance'),
+('Suzuki Swift', 2023, 'Blue', 4, 'Hatchback nhỏ gọn, linh hoạt trong phố', '2023-07-20', 11, 400000, 'Available'),
+('VinFast Fadil', 2021, 'Gray', 5, 'Xe đô thị cỡ nhỏ, thương hiệu Việt', '2021-11-11', 12, 380000, 'Available');
 ```
 
 #### Tạo Car Rentals (Lịch sử thuê xe)
 ```sql
 INSERT INTO CarRental (CustomerID, CarID, PickupDate, ReturnDate, RentPrice, Status) 
 VALUES 
-(2, 1, '2024-01-10', '2024-01-15', 2500000, 'Completed'),
-(2, 3, '2024-02-01', '2024-02-05', 3200000, 'Completed'),
-(3, 2, '2024-02-10', '2024-02-14', 1800000, 'Completed'),
-(4, 4, '2024-03-05', '2024-03-10', 6000000, 'Completed'),
-(2, 5, '2024-11-01', '2024-11-15', 19500000, 'Active');
+(5, 6, '2024-03-20', '2024-03-25', 2750000, 'Completed'),
+(6, 7, '2024-04-05', '2024-04-10', 3000000, 'Completed'),
+(5, 8, '2024-05-15', '2024-05-20', 1500000, 'Completed'),
+(7, 9, '2024-06-01', '2024-06-03', 10000000, 'Completed'),
+(8, 11, '2024-11-10', '2024-11-17', 2800000, 'Active');
 ```
 
 #### Tạo Reviews
 ```sql
 INSERT INTO Review (CustomerID, CarID, ReviewStar, Comment) 
 VALUES 
-(2, 1, 5, 'Xe rất tốt, sạch sẽ và tiết kiệm nhiên liệu. Sẽ thuê lại lần sau!'),
-(2, 3, 4, 'Xe mạnh mẽ nhưng hơi tốn xăng. Nhìn chung là tốt.'),
-(3, 2, 5, 'Xe đẹp, chạy êm, rất hài lòng với dịch vụ.'),
-(4, 4, 5, 'Xe sang trọng, thoải mái. Đáng giá tiền!');
+(5, 6, 5, 'Mazda 3 rất đẹp và hiện đại, lái rất thích!'),
+(6, 7, 4, 'Seltos rộng rãi, phù hợp với gia đình nhỏ. Giá thuê hợp lý.'),
+(5, 8, 3, 'Accent là lựa chọn kinh tế, nhưng xe hơi cũ một chút.'),
+(7, 9, 5, 'Trải nghiệm siêu xe tuyệt vời! Đáng từng xu.'),
+(8, 11, 4, 'Swift nhỏ gọn, đi lại trong thành phố rất tiện. Dịch vụ nhanh chóng.');
 ```
 
 ## Hướng dẫn chạy project
