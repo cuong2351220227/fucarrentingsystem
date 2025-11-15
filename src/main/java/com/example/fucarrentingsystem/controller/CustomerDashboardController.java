@@ -326,11 +326,62 @@ public class CustomerDashboardController {
         }
         
         try {
+            System.out.println("=== CustomerDashboardController.handleRentCar() Debug ===");
+            System.out.println("Current customer: " + (currentCustomer != null ? currentCustomer.getCustomerName() + " (ID: " + currentCustomer.getCustomerID() + ")" : "null"));
+            System.out.println("Selected car: " + (selectedCar != null ? selectedCar.getCarName() + " (ID: " + selectedCar.getCarID() + ")" : "null"));
+            System.out.println("Pickup date: " + pickup);
+            System.out.println("Return date: " + returnDate);
+
+            // Validate customer data
+            if (currentCustomer == null || currentCustomer.getCustomerID() == null) {
+                System.err.println("❌ Customer validation failed");
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể xác định thông tin khách hàng. Vui lòng đăng nhập lại.");
+                return;
+            }
+            System.out.println("✓ Customer validation passed");
+
+            // Validate car data
+            if (selectedCar.getCarID() == null) {
+                System.err.println("❌ Car validation failed");
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Thông tin xe không hợp lệ. Vui lòng chọn xe khác.");
+                return;
+            }
+            System.out.println("✓ Car validation passed");
+
+            // Check if car is still available (double-check)
+            if (!"Available".equals(selectedCar.getStatus())) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Xe này đã không còn sẵn có. Vui lòng chọn xe khác.");
+                handleClearSelection();
+                loadAvailableCars();
+                return;
+            }
+
+            // Check for existing rental conflicts more thoroughly
+            if (carRentalService.hasRentalConflict(selectedCar.getCarID(), pickup, returnDate)) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo",
+                    "Xe này đã được thuê trong khoảng thời gian bạn chọn. Vui lòng chọn thời gian khác.");
+                return;
+            }
+
+            if (carRentalService.hasCustomerCarConflict(currentCustomer.getCustomerID(),
+                    selectedCar.getCarID(), pickup)) {
+                showAlert(Alert.AlertType.WARNING, "Cảnh báo",
+                    "Bạn đã thuê xe này vào ngày " + pickup + ". Vui lòng chọn ngày khác hoặc xe khác.");
+                return;
+            }
+
             // Calculate total cost
             long days = ChronoUnit.DAYS.between(pickup, returnDate);
             double totalCost = days * selectedCar.getRentPrice();
             
-            // Create rental record
+            // Validate rental price
+            if (totalCost <= 0) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể tính toán giá thuê xe. Vui lòng thử lại.");
+                return;
+            }
+
+            // Create rental record with all required fields
+            System.out.println("Creating CarRental object...");
             CarRental rental = new CarRental();
             rental.setCustomer(currentCustomer);
             rental.setCar(selectedCar);
@@ -339,25 +390,70 @@ public class CustomerDashboardController {
             rental.setRentPrice(totalCost);
             rental.setStatus("Active");
             
-            // Save rental
-            carRentalService.save(rental);
-            
+            System.out.println("CarRental object created:");
+            System.out.println("- Customer: " + rental.getCustomer().getCustomerName() + " (ID: " + rental.getCustomer().getCustomerID() + ")");
+            System.out.println("- Car: " + rental.getCar().getCarName() + " (ID: " + rental.getCar().getCarID() + ")");
+            System.out.println("- Pickup: " + rental.getPickupDate());
+            System.out.println("- Return: " + rental.getReturnDate());
+            System.out.println("- Price: " + rental.getRentPrice());
+            System.out.println("- Status: " + rental.getStatus());
+
+            // Save rental first
+            System.out.println("Calling carRentalService.save()...");
+            CarRental savedRental = carRentalService.save(rental);
+
+            if (savedRental == null) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể lưu thông tin thuê xe. Vui lòng thử lại.");
+                return;
+            }
+
             // Update car status to Rented
             selectedCar.setStatus("Rented");
             carService.update(selectedCar);
             
             // Show success message
             showAlert(Alert.AlertType.INFORMATION, "Thuê xe thành công",
-                String.format("Thuê xe được xác nhận!\n\nXe: %s\nNgày nhận: %s\nNgày trả: %s\nTổng chi phí: %.0f VND",
-                    selectedCar.getCarName(), pickup, returnDate, totalCost));
-            
+                String.format("Thuê xe được xác nhận!\n\nXe: %s\nNgày nhận: %s\nNgày trả: %s\nSố ngày: %d\nTổng chi phí: %.0f VND",
+                    selectedCar.getCarName(), pickup, returnDate, days, totalCost));
+
             // Refresh data
             handleClearSelection();
             loadAvailableCars();
             loadRentalHistory();
             
+        } catch (IllegalArgumentException e) {
+            System.err.println("Validation error: " + e.getMessage());
+            showAlert(Alert.AlertType.WARNING, "Lỗi dữ liệu", "Dữ liệu không hợp lệ: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            System.err.println("Business logic error: " + e.getMessage());
+            showAlert(Alert.AlertType.WARNING, "Lỗi nghiệp vụ", e.getMessage());
+        } catch (jakarta.persistence.PersistenceException e) {
+            System.err.println("Database error: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi cơ sở dữ liệu",
+                "Không thể lưu thông tin thuê xe. Có thể do:\n" +
+                "- Xe này đã được thuê trong cùng thời gian\n" +
+                "- Vấn đề kết nối cơ sở dữ liệu\n" +
+                "- Lỗi ràng buộc dữ liệu\n\n" +
+                "Chi tiết lỗi: " + e.getMessage());
+        } catch (RuntimeException e) {
+            System.err.println("Runtime error: " + e.getMessage());
+            e.printStackTrace();
+            String message = e.getMessage();
+            if (message != null && message.contains("Failed to")) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi hệ thống", message);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Lỗi không xác định",
+                    "Đã xảy ra lỗi không mong muốn.\n\n" +
+                    "Chi tiết: " + (message != null ? message : "Không có thông tin chi tiết"));
+            }
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể xử lý thuê xe: " + e.getMessage());
+            System.err.println("Unexpected error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace(); // Log lỗi để debug
+            showAlert(Alert.AlertType.ERROR, "Lỗi",
+                "Không thể xử lý thuê xe. Vui lòng thử lại hoặc liên hệ hỗ trợ.\n\n" +
+                "Loại lỗi: " + e.getClass().getSimpleName() + "\n" +
+                "Chi tiết: " + e.getMessage());
         }
     }
 

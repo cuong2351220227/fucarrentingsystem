@@ -73,13 +73,13 @@ CREATE TABLE Car (
 #### Bảng CarRental
 ```sql
 CREATE TABLE CarRental (
+    RentalID INT PRIMARY KEY AUTO_INCREMENT,
     CustomerID INT NOT NULL,
     CarID INT NOT NULL,
     PickupDate DATE NOT NULL,
     ReturnDate DATE NOT NULL,
     RentPrice DOUBLE NOT NULL,
     Status VARCHAR(50) NOT NULL,
-    PRIMARY KEY (CustomerID, CarID, PickupDate),
     FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
     FOREIGN KEY (CarID) REFERENCES Car(CarID),
     CHECK (PickupDate < ReturnDate)

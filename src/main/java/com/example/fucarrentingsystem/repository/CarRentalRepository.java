@@ -19,6 +19,10 @@ public class CarRentalRepository {
     }
 
     public List<CarRental> findByCustomerId(Integer customerId) {
+        if (customerId == null) {
+            throw new IllegalArgumentException("Customer ID cannot be null");
+        }
+
         EntityManager em = HibernateUtil.getEntityManager();
         try {
             return em.createQuery(
@@ -26,6 +30,9 @@ public class CarRentalRepository {
                     CarRental.class)
                     .setParameter("customerId", customerId)
                     .getResultList();
+        } catch (Exception e) {
+            System.err.println("Error finding rentals by customer ID " + customerId + ": " + e.getMessage());
+            throw new RuntimeException("Failed to find rentals for customer: " + e.getMessage(), e);
         } finally {
             em.close();
         }
@@ -64,12 +71,16 @@ public class CarRentalRepository {
             em.getTransaction().begin();
             em.persist(carRental);
             em.getTransaction().commit();
+            System.out.println("CarRental saved successfully with ID: " + carRental.getRentalID());
             return carRental;
         } catch (Exception e) {
+            System.err.println("Error saving CarRental: " + e.getMessage());
+            e.printStackTrace();
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
+                System.out.println("Transaction rolled back due to error");
             }
-            throw e;
+            throw new RuntimeException("Failed to save car rental: " + e.getMessage(), e);
         } finally {
             em.close();
         }
@@ -81,12 +92,16 @@ public class CarRentalRepository {
             em.getTransaction().begin();
             carRental = em.merge(carRental);
             em.getTransaction().commit();
+            System.out.println("CarRental updated successfully with ID: " + carRental.getRentalID());
             return carRental;
         } catch (Exception e) {
+            System.err.println("Error updating CarRental: " + e.getMessage());
+            e.printStackTrace();
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
+                System.out.println("Transaction rolled back due to error");
             }
-            throw e;
+            throw new RuntimeException("Failed to update car rental: " + e.getMessage(), e);
         } finally {
             em.close();
         }

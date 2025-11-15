@@ -1,24 +1,24 @@
 package com.example.fucarrentingsystem.entity;
 
 import jakarta.persistence.*;
-import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "CarRental")
-@IdClass(CarRentalId.class)
 public class CarRental {
     @Id
-    @ManyToOne
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "RentalID")
+    private Integer rentalID;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "CustomerID", nullable = false)
     private Customer customer;
 
-    @Id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "CarID", nullable = false)
     private Car car;
 
-    @Id
     @Column(name = "PickupDate", nullable = false)
     private LocalDate pickupDate;
 
@@ -45,6 +45,14 @@ public class CarRental {
     }
 
     // Getters and Setters
+    public Integer getRentalID() {
+        return rentalID;
+    }
+
+    public void setRentalID(Integer rentalID) {
+        this.rentalID = rentalID;
+    }
+
     public Customer getCustomer() {
         return customer;
     }
@@ -92,60 +100,18 @@ public class CarRental {
     public void setStatus(String status) {
         this.status = status;
     }
-}
-
-// Composite Key Class
-class CarRentalId implements Serializable {
-    private Integer customer;
-    private Integer car;
-    private LocalDate pickupDate;
-
-    public CarRentalId() {}
-
-    public CarRentalId(Integer customer, Integer car, LocalDate pickupDate) {
-        this.customer = customer;
-        this.car = car;
-        this.pickupDate = pickupDate;
-    }
-
-    // Getters, Setters, equals and hashCode
-    public Integer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Integer customer) {
-        this.customer = customer;
-    }
-
-    public Integer getCar() {
-        return car;
-    }
-
-    public void setCar(Integer car) {
-        this.car = car;
-    }
-
-    public LocalDate getPickupDate() {
-        return pickupDate;
-    }
-
-    public void setPickupDate(LocalDate pickupDate) {
-        this.pickupDate = pickupDate;
-    }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CarRentalId that = (CarRentalId) o;
-        return customer.equals(that.customer) &&
-               car.equals(that.car) &&
-               pickupDate.equals(that.pickupDate);
-    }
-
-    @Override
-    public int hashCode() {
-        return customer.hashCode() + car.hashCode() + pickupDate.hashCode();
+    public String toString() {
+        return "CarRental{" +
+                "rentalID=" + rentalID +
+                ", customer=" + (customer != null ? customer.getCustomerName() : "null") +
+                ", car=" + (car != null ? car.getCarName() : "null") +
+                ", pickupDate=" + pickupDate +
+                ", returnDate=" + returnDate +
+                ", rentPrice=" + rentPrice +
+                ", status='" + status + '\'' +
+                '}';
     }
 }
 
