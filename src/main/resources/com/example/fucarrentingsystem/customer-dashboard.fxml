@@ -10,7 +10,7 @@
     <top>
         <VBox spacing="10.0" style="-fx-background-color: #16a085; -fx-padding: 15;">
             <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Label text="Customer Dashboard - FU Car Renting System" textFill="WHITE">
+                <Label text="Bảng điều khiển khách hàng - Hệ thống thuê xe FU" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="20.0"/>
                     </font>
@@ -21,7 +21,7 @@
                         <Font size="14.0"/>
                     </font>
                 </Label>
-                <Button text="Logout" onAction="#handleLogout" style="-fx-background-color: #c0392b; -fx-text-fill: white;"/>
+                <Button text="Đăng xuất" onAction="#handleLogout" style="-fx-background-color: #c0392b; -fx-text-fill: white;"/>
             </HBox>
         </VBox>
     </top>
@@ -29,14 +29,14 @@
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE">
             <!-- Profile Management Tab -->
-            <Tab text="My Profile">
+            <Tab text="Hồ sơ cá nhân">
                 <ScrollPane fitToWidth="true">
                     <VBox spacing="15.0">
                         <padding>
                             <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
                         </padding>
 
-                        <Label text="Personal Information">
+                        <Label text="Thông tin cá nhân">
                             <font>
                                 <Font name="System Bold" size="16.0"/>
                             </font>
@@ -48,47 +48,130 @@
                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="400.0"/>
                             </columnConstraints>
 
-                            <Label text="Full Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <Label text="Họ và tên:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                             <TextField fx:id="profileNameField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
                             <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                             <TextField fx:id="profileEmailField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                            <Label text="Mobile:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                            <Label text="Số điện thoại:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                             <TextField fx:id="profileMobileField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                            <Label text="Birthday:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                            <Label text="Ngày sinh:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                             <DatePicker fx:id="profileBirthdayPicker" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                            <Label text="Identity Card:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                            <Label text="CMND/CCCD:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                             <TextField fx:id="profileIdentityCardField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
-                            <Label text="Licence Number:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                            <Label text="Số bằng lái:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
                             <TextField fx:id="profileLicenceNumberField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
-                            <Label text="Licence Date:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+                            <Label text="Ngày cấp bằng lái:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
                             <DatePicker fx:id="profileLicenceDatePicker" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
 
-                            <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+                            <Label text="Mật khẩu:" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
                             <PasswordField fx:id="profilePasswordField" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
                         </GridPane>
 
                         <HBox spacing="10.0">
-                            <Button fx:id="updateProfileButton" text="Update Profile" onAction="#handleUpdateProfile"
+                            <Button fx:id="updateProfileButton" text="Cập nhật hồ sơ" onAction="#handleUpdateProfile"
                                     style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px;"/>
                         </HBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
 
+            <!-- Car Rental Tab -->
+            <Tab text="Thuê xe">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets top="15.0" right="15.0" bottom="15.0" left="15.0"/>
+                    </padding>
+
+                    <Label text="Các xe có sẵn để thuê">
+                        <font>
+                            <Font name="System Bold" size="16.0"/>
+                        </font>
+                    </Label>
+
+                    <!-- Search and Filter Section -->
+                    <HBox spacing="15.0" alignment="CENTER_LEFT">
+                        <Label text="Tìm theo tên xe:"/>
+                        <TextField fx:id="carSearchField" promptText="Nhập tên xe..." prefWidth="200.0"/>
+                        <Label text="Trạng thái:"/>
+                        <ComboBox fx:id="carStatusFilter" prefWidth="150.0"/>
+                        <Button text="Tìm kiếm" onAction="#handleSearchCars" style="-fx-background-color: #3498db; -fx-text-fill: white;"/>
+                        <Button text="Hiển thị tất cả" onAction="#handleShowAllCars" style="-fx-background-color: #95a5a6; -fx-text-fill: white;"/>
+                    </HBox>
+
+                    <!-- Available Cars Table -->
+                    <TableView fx:id="availableCarsTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="carNameColumn" text="Tên xe" prefWidth="200.0"/>
+                            <TableColumn fx:id="carProducerColumn" text="Hãng sản xuất" prefWidth="150.0"/>
+                            <TableColumn fx:id="carModelYearColumn" text="Năm sản xuất" prefWidth="100.0"/>
+                            <TableColumn fx:id="carColorColumn" text="Màu sắc" prefWidth="100.0"/>
+                            <TableColumn fx:id="carCapacityColumn" text="Số chỗ"/>
+                            <TableColumn fx:id="carRentPriceColumn" text="Giá/Ngày" prefWidth="100.0"/>
+                            <TableColumn fx:id="carStatusColumn" text="Trạng thái" prefWidth="100.0"/>
+                            <TableColumn fx:id="carActionColumn" text="Hành động" prefWidth="100.0"/>
+                        </columns>
+                    </TableView>
+
+                    <!-- Rental Form Section -->
+                    <VBox spacing="10.0" style="-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-background-radius: 5;">
+                        <Label text="Thông tin thuê xe">
+                            <font>
+                                <Font name="System Bold" size="14.0"/>
+                            </font>
+                        </Label>
+
+                        <GridPane hgap="15.0" vgap="10.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="120.0" prefWidth="150.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="200.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="120.0" prefWidth="150.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="200.0"/>
+                            </columnConstraints>
+
+                            <Label text="Xe đã chọn:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <Label fx:id="selectedCarLabel" text="Vui lòng chọn xe" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                            <Label text="Ngày nhận xe:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                            <DatePicker fx:id="pickupDatePicker" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+                            <Label text="Ngày trả xe:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <DatePicker fx:id="returnDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                            <Label text="Tổng số ngày:" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                            <Label fx:id="totalDaysLabel" text="0" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+
+                            <Label text="Giá mỗi ngày:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                            <Label fx:id="pricePerDayLabel" text="0.00" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                            <Label text="Tổng tiền:" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+                            <Label fx:id="totalCostLabel" text="0.00" style="-fx-font-weight: bold; -fx-text-fill: #e74c3c;" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+                        </GridPane>
+
+                        <HBox spacing="10.0">
+                            <Button fx:id="rentCarButton" text="Thuê xe này" onAction="#handleRentCar"
+                                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px;"
+                                    disable="true"/>
+                            <Button text="Hủy chọn" onAction="#handleClearSelection"
+                                    style="-fx-background-color: #e67e22; -fx-text-fill: white;"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </Tab>
+
             <!-- Rental History Tab -->
-            <Tab text="Rental History">
+            <Tab text="Lịch sử thuê xe">
                 <VBox spacing="10.0">
                     <padding>
                         <Insets top="15.0" right="15.0" bottom="15.0" left="15.0"/>
                     </padding>
 
-                    <Label text="My Rental History">
+                    <Label text="Lịch sử thuê xe của tôi">
                         <font>
                             <Font name="System Bold" size="16.0"/>
                         </font>
@@ -96,11 +179,11 @@
 
                     <TableView fx:id="rentalHistoryTable" VBox.vgrow="ALWAYS">
                         <columns>
-                            <TableColumn fx:id="rentalCarColumn" text="Car Name" prefWidth="200.0"/>
-                            <TableColumn fx:id="rentalPickupColumn" text="Pickup Date" prefWidth="150.0"/>
-                            <TableColumn fx:id="rentalReturnColumn" text="Return Date" prefWidth="150.0"/>
-                            <TableColumn fx:id="rentalPriceColumn" text="Price" prefWidth="100.0"/>
-                            <TableColumn fx:id="rentalStatusColumn" text="Status" prefWidth="150.0"/>
+                            <TableColumn fx:id="rentalCarColumn" text="Tên xe" prefWidth="200.0"/>
+                            <TableColumn fx:id="rentalPickupColumn" text="Ngày nhận" prefWidth="150.0"/>
+                            <TableColumn fx:id="rentalReturnColumn" text="Ngày trả" prefWidth="150.0"/>
+                            <TableColumn fx:id="rentalPriceColumn" text="Giá tiền" prefWidth="100.0"/>
+                            <TableColumn fx:id="rentalStatusColumn" text="Trạng thái" prefWidth="150.0"/>
                         </columns>
                     </TableView>
                 </VBox>

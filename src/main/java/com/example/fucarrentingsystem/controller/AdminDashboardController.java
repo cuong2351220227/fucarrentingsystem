@@ -123,7 +123,9 @@ public class AdminDashboardController {
     private void setupWelcomeMessage() {
         Customer currentUser = SessionManager.getInstance().getCurrentUser();
         if (currentUser != null) {
-            welcomeLabel.setText("Welcome, " + currentUser.getCustomerName() + " (Admin)");
+            welcomeLabel.setText("Xin chào, " + currentUser.getCustomerName() + " (Quản trị viên)");
+        } else {
+            welcomeLabel.setText("Xin chào, Quản trị viên");
         }
     }
 
@@ -204,7 +206,7 @@ public class AdminDashboardController {
                 car.setStatus(carStatusCombo.getValue());
 
                 carService.save(car);
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Car created successfully");
+                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Tạo xe mới thành công");
             } else {
                 // Update existing car
                 selectedCar.setCarName(carNameField.getText());
@@ -218,42 +220,42 @@ public class AdminDashboardController {
                 selectedCar.setStatus(carStatusCombo.getValue());
 
                 carService.update(selectedCar);
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Car updated successfully");
+                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật xe thành công");
             }
 
             clearCarFields();
             loadCars();
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Error saving car: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi lưu xe: " + e.getMessage());
         }
     }
 
     @FXML
     private void handleDeleteCar() {
         if (selectedCar == null) {
-            showAlert(Alert.AlertType.WARNING, "Warning", "Please select a car to delete");
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn xe cần xóa");
             return;
         }
 
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmation.setTitle("Confirm Delete");
-        confirmation.setHeaderText("Delete Car");
-        confirmation.setContentText("Are you sure you want to delete this car?");
+        confirmation.setTitle("Xác nhận xóa");
+        confirmation.setHeaderText("Xóa xe");
+        confirmation.setContentText("Bạn có chắc chắn muốn xóa xe này?");
 
         Optional<ButtonType> result = confirmation.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 carService.deleteCar(selectedCar.getCarID());
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Car deleted successfully");
+                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Xóa xe thành công");
                 clearCarFields();
                 loadCars();
             } catch (IllegalStateException e) {
                 // Car has rental history, can only update status
-                showAlert(Alert.AlertType.WARNING, "Cannot Delete",
-                    "This car has rental history and cannot be deleted.\n" +
-                    "You can only change its status.");
+                showAlert(Alert.AlertType.WARNING, "Không thể xóa",
+                    "Xe này có lịch sử thuê và không thể xóa.\n" +
+                    "Bạn chỉ có thể thay đổi trạng thái của xe.");
             } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Error deleting car: " + e.getMessage());
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi xóa xe: " + e.getMessage());
             }
         }
     }
@@ -283,7 +285,7 @@ public class AdminDashboardController {
         LocalDate endDate = reportEndDatePicker.getValue();
 
         if (startDate == null || endDate == null) {
-            showAlert(Alert.AlertType.WARNING, "Warning", "Please select start and end dates");
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn ngày bắt đầu và ngày kết thúc");
             return;
         }
 
@@ -291,15 +293,15 @@ public class AdminDashboardController {
             var rentals = carRentalService.generateRentalReport(startDate, endDate);
 
             StringBuilder report = new StringBuilder();
-            report.append("=== RENTAL REPORT ===\n");
-            report.append("Period: ").append(startDate).append(" to ").append(endDate).append("\n");
-            report.append("Total Rentals: ").append(rentals.size()).append("\n\n");
-            report.append("Details (sorted by price - descending):\n");
+            report.append("=== BÁO CÁO THUÊ XE ===\n");
+            report.append("Thời gian: ").append(startDate).append(" đến ").append(endDate).append("\n");
+            report.append("Tổng số lần thuê: ").append(rentals.size()).append("\n\n");
+            report.append("Chi tiết (sắp xếp theo giá giảm dần):\n");
             report.append("-".repeat(80)).append("\n");
 
             double totalRevenue = 0;
             for (var rental : rentals) {
-                report.append(String.format("Customer: %s | Car: %s | Pickup: %s | Return: %s | Price: $%.2f | Status: %s\n",
+                report.append(String.format("Khách hàng: %s | Xe: %s | Nhận xe: %s | Trả xe: %s | Giá: %.0f VND | Trạng thái: %s\n",
                     rental.getCustomer().getCustomerName(),
                     rental.getCar().getCarName(),
                     rental.getPickupDate(),
@@ -311,11 +313,11 @@ public class AdminDashboardController {
             }
 
             report.append("-".repeat(80)).append("\n");
-            report.append(String.format("Total Revenue: $%.2f\n", totalRevenue));
+            report.append(String.format("Tổng doanh thu: %.0f VND\n", totalRevenue));
 
             reportTextArea.setText(report.toString());
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Error generating report: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi tạo báo cáo: " + e.getMessage());
         }
     }
 
@@ -327,9 +329,9 @@ public class AdminDashboardController {
             Parent root = loader.load();
             Stage stage = (Stage) welcomeLabel.getScene().getWindow();
             stage.setScene(new Scene(root, 600, 400));
-            stage.setTitle("Login - FU Car Renting System");
+            stage.setTitle("Đăng nhập - Hệ thống thuê xe FU");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Error logging out: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi đăng xuất: " + e.getMessage());
         }
     }
 

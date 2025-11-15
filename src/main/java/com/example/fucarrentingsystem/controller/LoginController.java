@@ -47,7 +47,7 @@ public class LoginController implements Initializable {
 
         // Validate input
         if (email.isEmpty() || password.isEmpty()) {
-            errorLabel.setText("Please enter both email and password.");
+            errorLabel.setText("Vui lòng nhập cả email và mật khẩu.");
             return;
         }
 
@@ -63,11 +63,11 @@ public class LoginController implements Initializable {
             if (customer != null) {
                 loadCustomerDashboard(event, customer);
             } else {
-                errorLabel.setText("Invalid email or password.");
+                errorLabel.setText("Email hoặc mật khẩu không đúng.");
             }
 
         } catch (Exception e) {
-            errorLabel.setText("Login failed: " + e.getMessage());
+            errorLabel.setText("Đăng nhập thất bại: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -77,11 +77,11 @@ public class LoginController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fucarrentingsystem/admin-dashboard.fxml"));
             Scene scene = new Scene(loader.load());
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setTitle("Admin Dashboard - FU Car Renting System");
+            stage.setTitle("Bảng điều khiển quản trị - Hệ thống thuê xe FU");
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
-            errorLabel.setText("Failed to load admin dashboard: " + e.getMessage());
+            errorLabel.setText("Không thể tải bảng điều khiển quản trị: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -96,7 +96,7 @@ public class LoginController implements Initializable {
             controller.setCurrentCustomer(customer);
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setTitle("Customer Dashboard - FU Car Renting System");
+            stage.setTitle("Bảng điều khiển khách hàng - Hệ thống thuê xe FU");
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {

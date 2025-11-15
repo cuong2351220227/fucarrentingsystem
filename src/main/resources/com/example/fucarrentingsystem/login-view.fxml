@@ -11,13 +11,13 @@
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0"/>
     </padding>
 
-    <Label text="FU Car Renting System">
+    <Label text="Hệ thống thuê xe FU">
         <font>
             <Font name="System Bold" size="28.0"/>
         </font>
     </Label>
 
-    <Label text="Login">
+    <Label text="Đăng nhập">
         <font>
             <Font size="18.0"/>
         </font>
@@ -25,10 +25,10 @@
 
     <VBox spacing="10.0" maxWidth="300.0">
         <Label text="Email:"/>
-        <TextField fx:id="emailField" promptText="Enter your email"/>
+        <TextField fx:id="emailField" promptText="Nhập email của bạn"/>
 
-        <Label text="Password:"/>
-        <PasswordField fx:id="passwordField" promptText="Enter your password"/>
+        <Label text="Mật khẩu:"/>
+        <PasswordField fx:id="passwordField" promptText="Nhập mật khẩu của bạn"/>
 
         <Label fx:id="errorLabel" textFill="RED" wrapText="true">
             <font>
@@ -36,14 +36,14 @@
             </font>
         </Label>
 
-        <Button fx:id="loginButton" text="Login" onAction="#handleLogin" maxWidth="Infinity" styleClass="primary-button">
+        <Button fx:id="loginButton" text="Đăng nhập" onAction="#handleLogin" maxWidth="Infinity" styleClass="primary-button">
             <font>
                 <Font size="14.0"/>
             </font>
         </Button>
     </VBox>
 
-    <Label text="Default Admin: admin@fu.com / admin123" textFill="GRAY">
+    <Label text="Admin mặc định: admin@fu.com / admin123" textFill="GRAY">
         <font>
             <Font size="10.0"/>
         </font>

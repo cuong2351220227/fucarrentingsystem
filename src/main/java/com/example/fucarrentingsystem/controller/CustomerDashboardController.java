@@ -1,11 +1,14 @@
 package com.example.fucarrentingsystem.controller;
 
+import com.example.fucarrentingsystem.entity.Car;
 import com.example.fucarrentingsystem.entity.CarRental;
 import com.example.fucarrentingsystem.entity.Customer;
 import com.example.fucarrentingsystem.service.CarRentalService;
+import com.example.fucarrentingsystem.service.CarService;
 import com.example.fucarrentingsystem.service.CustomerService;
 import com.example.fucarrentingsystem.util.SessionManager;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -16,7 +19,9 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CustomerDashboardController {
 
@@ -43,6 +48,45 @@ public class CustomerDashboardController {
     @FXML
     private Button updateProfileButton;
 
+    // Car Rental Tab
+    @FXML
+    private TextField carSearchField;
+    @FXML
+    private ComboBox<String> carStatusFilter;
+    @FXML
+    private TableView<Car> availableCarsTable;
+    @FXML
+    private TableColumn<Car, String> carNameColumn;
+    @FXML
+    private TableColumn<Car, String> carProducerColumn;
+    @FXML
+    private TableColumn<Car, Integer> carModelYearColumn;
+    @FXML
+    private TableColumn<Car, String> carColorColumn;
+    @FXML
+    private TableColumn<Car, Integer> carCapacityColumn;
+    @FXML
+    private TableColumn<Car, Double> carRentPriceColumn;
+    @FXML
+    private TableColumn<Car, String> carStatusColumn;
+    @FXML
+    private TableColumn<Car, Void> carActionColumn;
+    
+    @FXML
+    private Label selectedCarLabel;
+    @FXML
+    private DatePicker pickupDatePicker;
+    @FXML
+    private DatePicker returnDatePicker;
+    @FXML
+    private Label totalDaysLabel;
+    @FXML
+    private Label pricePerDayLabel;
+    @FXML
+    private Label totalCostLabel;
+    @FXML
+    private Button rentCarButton;
+
     // Rental History Tab
     @FXML
     private TableView<CarRental> rentalHistoryTable;
@@ -59,11 +103,16 @@ public class CustomerDashboardController {
 
     private final CustomerService customerService;
     private final CarRentalService carRentalService;
+    private final CarService carService;
     private Customer currentCustomer;
+    private Car selectedCar;
+    private final ObservableList<Car> allCars;
 
     public CustomerDashboardController() {
         this.customerService = new CustomerService();
         this.carRentalService = new CarRentalService();
+        this.carService = new CarService();
+        this.allCars = FXCollections.observableArrayList();
     }
 
     @FXML
@@ -73,12 +122,14 @@ public class CustomerDashboardController {
             setupWelcomeMessage();
             loadProfileData();
             setupRentalHistoryTable();
+            setupCarRentalTab();
             loadRentalHistory();
+            loadAvailableCars();
         }
     }
 
     private void setupWelcomeMessage() {
-        welcomeLabel.setText("Welcome, " + currentCustomer.getCustomerName());
+        welcomeLabel.setText("Xin chào, " + currentCustomer.getCustomerName());
     }
 
     private void loadProfileData() {
@@ -90,6 +141,224 @@ public class CustomerDashboardController {
         profileLicenceNumberField.setText(currentCustomer.getLicenceNumber());
         profileLicenceDatePicker.setValue(currentCustomer.getLicenceDate());
         profilePasswordField.setText(currentCustomer.getPassword());
+    }
+
+    private void setupCarRentalTab() {
+        // Setup car status filter
+        carStatusFilter.getItems().addAll("Tất cả", "Có sẵn", "Đã thuê", "Bảo trì");
+        carStatusFilter.setValue("Có sẵn");
+
+        // Initialize labels
+        selectedCarLabel.setText("Vui lòng chọn xe");
+        pricePerDayLabel.setText("0 VND");
+        totalDaysLabel.setText("0");
+        totalCostLabel.setText("0 VND");
+
+        // Setup available cars table
+        carNameColumn.setCellValueFactory(new PropertyValueFactory<>("carName"));
+        carProducerColumn.setCellValueFactory(cellData -> 
+            new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProducer().getProducerName()));
+        carModelYearColumn.setCellValueFactory(new PropertyValueFactory<>("carModelYear"));
+        carColorColumn.setCellValueFactory(new PropertyValueFactory<>("color"));
+        carCapacityColumn.setCellValueFactory(new PropertyValueFactory<>("capacity"));
+        carRentPriceColumn.setCellValueFactory(new PropertyValueFactory<>("rentPrice"));
+        carStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        
+        // Setup action column with "Select" button
+        carActionColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button selectButton = new Button("Chọn");
+
+            {
+                selectButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+                selectButton.setOnAction(event -> {
+                    Car car = getTableView().getItems().get(getIndex());
+                    selectCar(car);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Car car = getTableView().getItems().get(getIndex());
+                    selectButton.setDisable(!"Available".equals(car.getStatus()));
+                    setGraphic(selectButton);
+                }
+            }
+        });
+        
+        // Setup date pickers listeners
+        pickupDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> calculateTotal());
+        returnDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> calculateTotal());
+        
+        // Set minimum dates to today
+        pickupDatePicker.setValue(LocalDate.now());
+        returnDatePicker.setValue(LocalDate.now().plusDays(1));
+    }
+
+    private void loadAvailableCars() {
+        List<Car> cars = carService.findAll();
+        allCars.setAll(cars);
+        filterCars();
+    }
+    
+    private void filterCars() {
+        String statusFilter = carStatusFilter.getValue();
+        String searchText = carSearchField.getText().toLowerCase().trim();
+        
+        List<Car> filteredCars = allCars.stream()
+            .filter(car -> {
+                // Status filter
+                String carStatus = car.getStatus();
+                String mappedStatus = mapStatusToVietnamese(carStatus);
+                if (!"Tất cả".equals(statusFilter) && !statusFilter.equals(mappedStatus)) {
+                    return false;
+                }
+                // Search filter
+                return searchText.isEmpty() || car.getCarName().toLowerCase().contains(searchText);
+            })
+            .collect(Collectors.toList());
+            
+        availableCarsTable.setItems(FXCollections.observableArrayList(filteredCars));
+    }
+    
+    private String mapStatusToVietnamese(String englishStatus) {
+        switch (englishStatus) {
+            case "Available": return "Có sẵn";
+            case "Rented": return "Đã thuê";
+            case "Maintenance": return "Bảo trì";
+            default: return englishStatus;
+        }
+    }
+
+    @FXML
+    private void handleSearchCars() {
+        filterCars();
+    }
+    
+    @FXML
+    private void handleShowAllCars() {
+        carSearchField.clear();
+        carStatusFilter.setValue("Tất cả");
+        filterCars();
+    }
+    
+    private void selectCar(Car car) {
+        if (!"Available".equals(car.getStatus())) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Xe này hiện không có sẵn để thuê.");
+            return;
+        }
+        
+        selectedCar = car;
+        selectedCarLabel.setText(car.getCarName() + " (" + car.getProducer().getProducerName() + ")");
+        pricePerDayLabel.setText(String.format("%.0f VND", car.getRentPrice()));
+        rentCarButton.setDisable(false);
+        calculateTotal();
+        
+        showAlert(Alert.AlertType.INFORMATION, "Đã chọn xe",
+            "Bạn đã chọn: " + car.getCarName() + "\nVui lòng chọn ngày thuê xe.");
+    }
+    
+    @FXML
+    private void handleClearSelection() {
+        selectedCar = null;
+        selectedCarLabel.setText("Vui lòng chọn xe");
+        pricePerDayLabel.setText("0 VND");
+        totalDaysLabel.setText("0");
+        totalCostLabel.setText("0 VND");
+        rentCarButton.setDisable(true);
+        pickupDatePicker.setValue(LocalDate.now());
+        returnDatePicker.setValue(LocalDate.now().plusDays(1));
+    }
+    
+    private void calculateTotal() {
+        if (selectedCar == null || pickupDatePicker.getValue() == null || returnDatePicker.getValue() == null) {
+            totalDaysLabel.setText("0");
+            totalCostLabel.setText("0 VND");
+            return;
+        }
+        
+        LocalDate pickup = pickupDatePicker.getValue();
+        LocalDate returnDate = returnDatePicker.getValue();
+        
+        if (pickup.isBefore(LocalDate.now())) {
+            pickupDatePicker.setValue(LocalDate.now());
+            return;
+        }
+        
+        if (returnDate.isBefore(pickup) || returnDate.isEqual(pickup)) {
+            returnDatePicker.setValue(pickup.plusDays(1));
+            return;
+        }
+        
+        long days = ChronoUnit.DAYS.between(pickup, returnDate);
+        double totalCost = days * selectedCar.getRentPrice();
+        
+        totalDaysLabel.setText(String.valueOf(days));
+        totalCostLabel.setText(String.format("%.0f VND", totalCost));
+    }
+    
+    @FXML
+    private void handleRentCar() {
+        if (selectedCar == null) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn xe trước.");
+            return;
+        }
+        
+        LocalDate pickup = pickupDatePicker.getValue();
+        LocalDate returnDate = returnDatePicker.getValue();
+        
+        if (pickup == null || returnDate == null) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng chọn cả ngày nhận và ngày trả xe.");
+            return;
+        }
+        
+        if (pickup.isBefore(LocalDate.now())) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Ngày nhận xe không thể là ngày trong quá khứ.");
+            return;
+        }
+        
+        if (returnDate.isBefore(pickup) || returnDate.isEqual(pickup)) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Ngày trả xe phải sau ngày nhận xe.");
+            return;
+        }
+        
+        try {
+            // Calculate total cost
+            long days = ChronoUnit.DAYS.between(pickup, returnDate);
+            double totalCost = days * selectedCar.getRentPrice();
+            
+            // Create rental record
+            CarRental rental = new CarRental();
+            rental.setCustomer(currentCustomer);
+            rental.setCar(selectedCar);
+            rental.setPickupDate(pickup);
+            rental.setReturnDate(returnDate);
+            rental.setRentPrice(totalCost);
+            rental.setStatus("Active");
+            
+            // Save rental
+            carRentalService.save(rental);
+            
+            // Update car status to Rented
+            selectedCar.setStatus("Rented");
+            carService.update(selectedCar);
+            
+            // Show success message
+            showAlert(Alert.AlertType.INFORMATION, "Thuê xe thành công",
+                String.format("Thuê xe được xác nhận!\n\nXe: %s\nNgày nhận: %s\nNgày trả: %s\nTổng chi phí: %.0f VND",
+                    selectedCar.getCarName(), pickup, returnDate, totalCost));
+            
+            // Refresh data
+            handleClearSelection();
+            loadAvailableCars();
+            loadRentalHistory();
+            
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể xử lý thuê xe: " + e.getMessage());
+        }
     }
 
     private void setupRentalHistoryTable() {
@@ -120,10 +389,10 @@ public class CustomerDashboardController {
             customerService.updateProfile(currentCustomer);
             SessionManager.getInstance().setCurrentUser(currentCustomer);
 
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Profile updated successfully");
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật hồ sơ thành công");
             setupWelcomeMessage();
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Error updating profile: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi cập nhật hồ sơ: " + e.getMessage());
         }
     }
 
@@ -135,9 +404,9 @@ public class CustomerDashboardController {
             Parent root = loader.load();
             Stage stage = (Stage) welcomeLabel.getScene().getWindow();
             stage.setScene(new Scene(root, 600, 400));
-            stage.setTitle("Login - FU Car Renting System");
+            stage.setTitle("Đăng nhập - Hệ thống thuê xe FU");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Error logging out: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi đăng xuất: " + e.getMessage());
         }
     }
 
@@ -155,6 +424,8 @@ public class CustomerDashboardController {
         setupWelcomeMessage();
         loadProfileData();
         setupRentalHistoryTable();
+        setupCarRentalTab();
         loadRentalHistory();
+        loadAvailableCars();
     }
 }
