@@ -52,7 +52,7 @@
                             <TextField fx:id="profileNameField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
                             <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                            <TextField fx:id="profileEmailField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                            <TextField fx:id="profileEmailField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
                             <Label text="Số điện thoại:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                             <TextField fx:id="profileMobileField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
@@ -183,7 +183,8 @@
                             <TableColumn fx:id="rentalPickupColumn" text="Ngày nhận" prefWidth="150.0"/>
                             <TableColumn fx:id="rentalReturnColumn" text="Ngày trả" prefWidth="150.0"/>
                             <TableColumn fx:id="rentalPriceColumn" text="Giá tiền" prefWidth="100.0"/>
-                            <TableColumn fx:id="rentalStatusColumn" text="Trạng thái" prefWidth="150.0"/>
+                            <TableColumn fx:id="rentalStatusColumn" text="Trạng thái" prefWidth="120.0"/>
+                            <TableColumn fx:id="rentalActionColumn" text="Hành động" prefWidth="100.0"/>
                         </columns>
                     </TableView>
                 </VBox>

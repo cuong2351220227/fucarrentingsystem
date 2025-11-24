@@ -43,6 +43,11 @@ public class CustomerService {
     }
 
     public Customer updateProfile(Customer customer) {
+        // Check if email already exists for a different customer
+        Optional<Customer> existing = customerRepository.findByEmail(customer.getEmail());
+        if (existing.isPresent() && !existing.get().getCustomerID().equals(customer.getCustomerID())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
         return customerRepository.save(customer);
     }
 }

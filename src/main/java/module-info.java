@@ -5,6 +5,7 @@ module com.example.fucarrentingsystem {
     requires org.hibernate.orm.core;
     requires java.naming;
     requires java.sql;
+    requires jakarta.mail;
 
     opens com.example.fucarrentingsystem to javafx.fxml;
     opens com.example.fucarrentingsystem.entity to org.hibernate.orm.core, javafx.base;

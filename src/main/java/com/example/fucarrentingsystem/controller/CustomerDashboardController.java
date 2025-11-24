@@ -6,6 +6,7 @@ import com.example.fucarrentingsystem.entity.Customer;
 import com.example.fucarrentingsystem.service.CarRentalService;
 import com.example.fucarrentingsystem.service.CarService;
 import com.example.fucarrentingsystem.service.CustomerService;
+import com.example.fucarrentingsystem.service.EmailService;
 import com.example.fucarrentingsystem.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -100,10 +101,13 @@ public class CustomerDashboardController {
     private TableColumn<CarRental, Double> rentalPriceColumn;
     @FXML
     private TableColumn<CarRental, String> rentalStatusColumn;
+    @FXML
+    private TableColumn<CarRental, Void> rentalActionColumn;
 
     private final CustomerService customerService;
     private final CarRentalService carRentalService;
     private final CarService carService;
+    private final EmailService emailService;
     private Customer currentCustomer;
     private Car selectedCar;
     private final ObservableList<Car> allCars;
@@ -112,6 +116,7 @@ public class CustomerDashboardController {
         this.customerService = new CustomerService();
         this.carRentalService = new CarRentalService();
         this.carService = new CarService();
+        this.emailService = new EmailService();
         this.allCars = FXCollections.observableArrayList();
     }
 
@@ -464,6 +469,26 @@ public class CustomerDashboardController {
         rentalReturnColumn.setCellValueFactory(new PropertyValueFactory<>("returnDate"));
         rentalPriceColumn.setCellValueFactory(new PropertyValueFactory<>("rentPrice"));
         rentalStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        // Setup action column with send invoice button
+        rentalActionColumn.setCellFactory(col -> new TableCell<CarRental, Void>() {
+            private final Button sendButton = new Button("Gửi hóa đơn");
+
+            {
+                sendButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 5 10;");
+                sendButton.setPrefWidth(100);
+                sendButton.setOnAction(event -> {
+                    CarRental rental = getTableView().getItems().get(getIndex());
+                    handleSendInvoice(rental);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : sendButton);
+            }
+        });
     }
 
     private void loadRentalHistory() {
@@ -474,7 +499,15 @@ public class CustomerDashboardController {
     @FXML
     private void handleUpdateProfile() {
         try {
+            // Validate email format
+            String newEmail = profileEmailField.getText().trim();
+            if (newEmail.isEmpty() || !newEmail.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                showAlert(Alert.AlertType.WARNING, "Lỗi xác thực", "Email không hợp lệ!");
+                return;
+            }
+
             currentCustomer.setCustomerName(profileNameField.getText());
+            currentCustomer.setEmail(newEmail);
             currentCustomer.setMobile(profileMobileField.getText());
             currentCustomer.setBirthday(profileBirthdayPicker.getValue());
             currentCustomer.setIdentityCard(profileIdentityCardField.getText());
@@ -487,6 +520,8 @@ public class CustomerDashboardController {
 
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật hồ sơ thành công");
             setupWelcomeMessage();
+        } catch (IllegalArgumentException e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Email đã tồn tại trong hệ thống!");
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi cập nhật hồ sơ: " + e.getMessage());
         }
@@ -504,6 +539,59 @@ public class CustomerDashboardController {
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi khi đăng xuất: " + e.getMessage());
         }
+    }
+
+    /**
+     * Gửi hóa đơn qua email
+     */
+    private void handleSendInvoice(CarRental rental) {
+        // Kiểm tra email
+        if (currentCustomer.getEmail() == null || currentCustomer.getEmail().trim().isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo",
+                "Email chưa được cập nhật. Vui lòng cập nhật trong Hồ sơ cá nhân.");
+            return;
+        }
+
+        // Xác nhận trước khi gửi
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Gửi hóa đơn");
+        confirm.setHeaderText("Xác nhận gửi hóa đơn");
+        confirm.setContentText("Gửi hóa đơn đến email: " + currentCustomer.getEmail() + " ?");
+
+        if (confirm.showAndWait().get() != ButtonType.OK) {
+            return;
+        }
+
+        // Hiển thị loading
+        Alert loading = new Alert(Alert.AlertType.INFORMATION);
+        loading.setTitle("Đang xử lý");
+        loading.setHeaderText(null);
+        loading.setContentText("Đang gửi hóa đơn...");
+        loading.show();
+
+        // Gửi email trong background thread
+        new Thread(() -> {
+            try {
+                boolean success = emailService.sendRentalInvoice(rental, currentCustomer);
+
+                javafx.application.Platform.runLater(() -> {
+                    loading.close();
+                    if (success) {
+                        showAlert(Alert.AlertType.INFORMATION, "Thành công",
+                            "Hóa đơn đã được gửi đến:\n" + currentCustomer.getEmail() +
+                            "\n\n(Kiểm tra thư mục Spam nếu không thấy)");
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi",
+                            "Không thể gửi email. Kiểm tra lại cấu hình SMTP trong EmailService.java");
+                    }
+                });
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    loading.close();
+                    showAlert(Alert.AlertType.ERROR, "Lỗi", "Lỗi: " + e.getMessage());
+                });
+            }
+        }).start();
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
